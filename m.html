@@ -3,18 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Route Video Maker｜地図ルートを動画・画像に無料変換</title>
-<meta name="description" content="出発地と到着地を指定するだけで、地図上のルートをアニメーション動画やSNS投稿用の画像に変換できる無料ツール「Route Video Maker」。徒歩・車・自転車ルートに対応。">
+<title>Route Video Maker（スマホ版）｜地図ルートを動画・画像に無料変換</title>
+<meta name="description" content="出発地と到着地を指定するだけで、地図上のルートをアニメーション動画やSNS投稿用の画像に変換できる無料ツール「Route Video Maker」のスマホ向けページです。">
 <meta property="og:title" content="Route Video Maker｜地図ルートを動画に変換">
 <meta property="og:description" content="出発地・到着地を指定するだけで地図ルートを動画/画像として書き出せる無料ツール「Route Video Maker」です。">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://hobbylab-m.github.io/route-video-maker/">
-<link rel="alternate" media="only screen and (max-width: 768px)" href="m.html">
-<script>
-  if (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) {
-    location.replace('m.html');
-  }
-</script>
+<meta property="og:url" content="https://hobbylab-m.github.io/route-video-maker/m.html">
+<link rel="canonical" href="https://hobbylab-m.github.io/route-video-maker/">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <style>
   :root{
@@ -468,7 +463,7 @@
     display:flex;
     align-items:center;
     justify-content:center;
-    z-index:1000;
+    z-index:3000;
     padding:24px;
   }
   #result-overlay[hidden]{display:none;}
@@ -551,7 +546,7 @@
     display:flex;
     align-items:center;
     justify-content:center;
-    z-index:999;
+    z-index:3000;
   }
   #progress-overlay[hidden]{display:none;}
   #progress-card{
@@ -606,7 +601,7 @@
     display:flex;
     align-items:center;
     justify-content:center;
-    z-index:1000;
+    z-index:3000;
     padding:24px;
   }
   #about-overlay[hidden]{display:none;}
@@ -638,11 +633,67 @@
     line-height:1;
   }
   #about-close:hover{color:#fff;}
+
+  /* ---------- スマホ版：タブ切り替えレイアウト ---------- */
+  html, body{
+    height:100%;
+    overflow:hidden;
+  }
+  body{
+    display:block;
+  }
+  #panel{
+    position:fixed;
+    inset:0;
+    width:100%;
+    min-width:0;
+    height:100%;
+    padding:18px 16px 78px;
+    overflow-y:auto;
+    z-index:20;
+    box-shadow:none;
+  }
+  #map-wrap{
+    position:fixed;
+    inset:0;
+    z-index:5;
+  }
+  body.tab-map #panel{display:none;}
+  body.tab-settings #map-wrap{display:none;}
+
+  #tab-bar{
+    position:fixed;
+    left:0;right:0;bottom:0;
+    height:60px;
+    display:flex;
+    z-index:2000;
+    background:var(--panel);
+    border-top:1px solid var(--line);
+  }
+  #tab-bar button{
+    flex:1;
+    border:none;
+    background:transparent;
+    color:var(--muted);
+    font-size:12px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:2px;
+    cursor:pointer;
+  }
+  #tab-bar button .ic{font-size:19px;}
+  #tab-bar button.active{color:#fff;}
+  #tab-bar button.active .ic{color:var(--accent-2);}
+
+  .credit-badge{bottom:70px;}
+  #legal-footer{display:none;}
 </style>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1571842340209517"
      crossorigin="anonymous"></script>
 </head>
-<body>
+<body class="tab-settings">
 
 <div id="panel">
   <div id="brand">
@@ -778,7 +829,7 @@
     <h3>こんな時に便利</h3>
     <p>旅行やドライブのルートをSNSでシェアしたい時、ランニング・サイクリングの走行記録を動画にしたい時、待ち合わせ場所への行き方を分かりやすい動画で説明したい時などに活用できます。</p>
 
-    <p style="margin-top:16px;"><a href="privacy.html" style="color:var(--accent);">プライバシーポリシー</a> ／ <a href="terms.html" style="color:var(--accent);">利用規約</a></p>
+    <p style="margin-top:16px;"><a href="privacy.html" style="color:var(--accent);">プライバシーポリシー</a> ／ <a href="terms.html" style="color:var(--accent);">利用規約</a> ／ <a href="index.html" style="color:var(--accent);">PC版を見る</a></p>
   </div>
 </div>
 
@@ -805,6 +856,15 @@
 <div id="map-wrap">
   <div id="map"></div>
   <div class="credit-badge">© openrouteservice.org by HeiGIT | Map data © OpenStreetMap contributors</div>
+</div>
+
+<div id="tab-bar">
+  <button id="tab-btn-settings" type="button" class="active">
+    <span class="ic">⚙️</span>設定
+  </button>
+  <button id="tab-btn-map" type="button">
+    <span class="ic">🗺️</span>地図
+  </button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -1041,6 +1101,7 @@
       drawStraightThroughWaypoints();
       step2.hidden = false;
       updateEditCount();
+      switchTab('map');
       return;
     }
 
@@ -1092,6 +1153,7 @@
 
       step2.hidden = false;
       updateEditCount();
+      switchTab('map');
 
       statusEl.classList.remove('warn');
       if(summary){
@@ -1630,6 +1692,28 @@
   generateBtn.addEventListener('click', generateOutput);
   resultClose.addEventListener('click', closeResultOverlay);
   resultRetry.addEventListener('click', closeResultOverlay);
+
+  // ---- スマホ版：地図／設定タブ切り替え ----
+  const tabBtnMap = document.getElementById('tab-btn-map');
+  const tabBtnSettings = document.getElementById('tab-btn-settings');
+
+  function switchTab(name){
+    if(name === 'map'){
+      document.body.classList.add('tab-map');
+      document.body.classList.remove('tab-settings');
+      tabBtnMap.classList.add('active');
+      tabBtnSettings.classList.remove('active');
+      setTimeout(() => map.invalidateSize(), 50);
+    } else {
+      document.body.classList.add('tab-settings');
+      document.body.classList.remove('tab-map');
+      tabBtnSettings.classList.add('active');
+      tabBtnMap.classList.remove('active');
+    }
+  }
+
+  tabBtnMap.addEventListener('click', () => switchTab('map'));
+  tabBtnSettings.addEventListener('click', () => switchTab('settings'));
 
   updateStatus();
 </script>
