@@ -698,7 +698,7 @@
   }).addTo(map);
 
   // OpenRouteServiceへは直接呼ばず、Cloudflare Workers経由で呼ぶ（APIキーはWorker側にのみ保管）
-  const ORS_PROXY_URL = 'https://frosty-breeze-a43d.matsujunakita-164.workers.dev';
+  const ORS_PROXY_URL = 'https://route-video-proxy.hobbylab-m.workers.dev';
 
   let startPoint = null; // {lat,lng,label}
   let endPoint = null;
@@ -1226,9 +1226,11 @@
     });
   }
 
-  // CARTO の無料ベースマップタイル（CORS許可あり）を使用。
+  // 国土地理院（GSI）の標準地図タイル（CORS許可あり、常に日本語表記）を使用。
   // 通常の地図表示は OpenStreetMap 標準タイルを使うが、
   // Canvas書き出しには CORS 制限のないタイル元が必要なため、書き出し専用でこちらを使う。
+  // CARTOの海外向け地図だと広域表示時に地名がローマ字になってしまうため、
+  // 日本語表記が常に維持されるGSIタイルに切り替えている（日本国内のルート向け）。
   async function loadTiles(view, W, H){
     const z = view.zoom;
     const maxIndex = Math.pow(2, z) - 1;
@@ -1242,7 +1244,7 @@
       for(let ty = startTy; ty <= endTy; ty++){
         if(ty < 0 || ty > maxIndex) continue;
         const wrappedX = ((tx % (maxIndex + 1)) + (maxIndex + 1)) % (maxIndex + 1);
-        const url = `https://basemaps.cartocdn.com/light_all/${z}/${wrappedX}/${ty}.png`;
+        const url = `https://cyberjapandata.gsi.go.jp/xyz/std/${z}/${wrappedX}/${ty}.png`;
         const dx = tx * TILE_SIZE - view.originX;
         const dy = ty * TILE_SIZE - view.originY;
         jobs.push(loadImage(url).then(img => ({ img, dx, dy })).catch(() => null));
@@ -1372,7 +1374,7 @@
       function drawCredit(){
         const fontSize = Math.max(11, Math.round(W * 0.013));
         ctx.font = `${fontSize}px sans-serif`;
-        const text = '© OpenStreetMap contributors, © CARTO ／ Routing © openrouteservice.org';
+        const text = '地図データ：国土地理院 ／ Routing © openrouteservice.org';
         const paddingX = fontSize * 0.6;
         const textW = ctx.measureText(text).width;
         const boxH = fontSize + paddingX;
