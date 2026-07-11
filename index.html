@@ -697,8 +697,8 @@
     attribution: '&copy; OpenStreetMap contributors'
   }).addTo(map);
 
-  // OpenRouteService APIキー（開発用。本番公開前にダッシュボードでリファラー制限をかけること）
-  const ORS_API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImM5Y2IzNzc5NjliYzQ4ODRiMjVhZGQ0NzNlYTE3N2VjIiwiaCI6Im11cm11cjY0In0=';
+  // OpenRouteServiceへは直接呼ばず、Cloudflare Workers経由で呼ぶ（APIキーはWorker側にのみ保管）
+  const ORS_PROXY_URL = 'https://frosty-breeze-a43d.matsujunakita-164.workers.dev';
 
   let startPoint = null; // {lat,lng,label}
   let endPoint = null;
@@ -930,7 +930,7 @@
     statusEl.classList.remove('warn');
     statusEl.textContent = 'OpenRouteServiceに問い合わせ中…';
 
-    const url = `https://api.openrouteservice.org/v2/directions/${profile}/geojson`;
+    const url = `${ORS_PROXY_URL}/v2/directions/${profile}/geojson`;
     const coordinates = [
       [startPoint.lng, startPoint.lat],
       ...waypoints.map(w => [w.lng, w.lat]),
@@ -941,7 +941,6 @@
       const res = await fetch(url, {
         method: 'POST',
         headers: {
-          'Authorization': ORS_API_KEY,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ coordinates })
