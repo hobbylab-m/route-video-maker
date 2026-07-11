@@ -137,6 +137,7 @@
     line-height:1.5;
   }
   .pick-hint b{color:#cdd4e4;}
+  .pick-hint.warn{color:var(--accent-2);}
 
   #mode-toggle{
     display:flex;
@@ -639,6 +640,17 @@
 
     <div class="field-row">
       <div class="sub">
+        <label>地図デザイン</label>
+        <select id="basemap-select">
+          <option value="carto">CARTO（明るい・おしゃれ）</option>
+          <option value="gsi">国土地理院（常に日本語表記）</option>
+        </select>
+      </div>
+    </div>
+    <p class="pick-hint" id="basemap-hint" style="margin-top:-4px;"></p>
+
+    <div class="field-row">
+      <div class="sub">
         <label>ラインの色</label>
         <input type="color" id="line-color" value="#2f6feb">
       </div>
@@ -1118,6 +1130,8 @@
   const widthSlider = document.getElementById('width-slider');
   const widthValue = document.getElementById('width-value');
   const sizeSelect = document.getElementById('size-select');
+  const basemapSelect = document.getElementById('basemap-select');
+  const basemapHint = document.getElementById('basemap-hint');
   const generateBtn = document.getElementById('generate-btn');
   const outputStatusEl = document.getElementById('output-status');
 
@@ -1142,6 +1156,30 @@
     portrait:  { w: 1080, h: 1920 },
     small:     { w: 800,  h: 600  }
   };
+
+  // 書き出し用の地図デザイン（タイル元）の定義
+  const BASEMAP_STYLES = {
+    carto: {
+      tileUrl: (z, x, y) => `https://basemaps.cartocdn.com/light_all/${z}/${x}/${y}.png`,
+      credit: '© OpenStreetMap contributors, © CARTO ／ Routing © openrouteservice.org',
+      hint: '⚠ CARTOのデザインは、ルートが広範囲になると地名がローマ字表記になることがあります。',
+      hintWarn: true
+    },
+    gsi: {
+      tileUrl: (z, x, y) => `https://cyberjapandata.gsi.go.jp/xyz/std/${z}/${x}/${y}.png`,
+      credit: '地図データ：国土地理院 ／ Routing © openrouteservice.org',
+      hint: '国土地理院の地図：日本国内なら、どんなに広範囲でも地名は常に日本語表記になります（日本国外のルートには対応していません）。',
+      hintWarn: false
+    }
+  };
+
+  function updateBasemapHint(){
+    const style = BASEMAP_STYLES[basemapSelect.value] || BASEMAP_STYLES.carto;
+    basemapHint.textContent = style.hint;
+    basemapHint.classList.toggle('warn', !!style.hintWarn);
+  }
+  basemapSelect.addEventListener('change', updateBasemapHint);
+  updateBasemapHint();
 
   function showRouteScreen(){
     outputScreen.hidden = true;
@@ -1226,12 +1264,11 @@
     });
   }
 
-  // 国土地理院（GSI）の標準地図タイル（CORS許可あり、常に日本語表記）を使用。
-  // 通常の地図表示は OpenStreetMap 標準タイルを使うが、
-  // Canvas書き出しには CORS 制限のないタイル元が必要なため、書き出し専用でこちらを使う。
-  // CARTOの海外向け地図だと広域表示時に地名がローマ字になってしまうため、
-  // 日本語表記が常に維持されるGSIタイルに切り替えている（日本国内のルート向け）。
-  async function loadTiles(view, W, H){
+  // 書き出し用のタイル元は「地図デザイン」の選択（CARTO／国土地理院）によって切り替わる。
+  // どちらもCORS許可ありのタイル元（通常の地図表示のOpenStreetMap標準タイルはCORS非対応のため、
+  // Canvas書き出しにはこちらを使う）。
+  async function loadTiles(view, W, H, styleKey){
+    const style = BASEMAP_STYLES[styleKey] || BASEMAP_STYLES.carto;
     const z = view.zoom;
     const maxIndex = Math.pow(2, z) - 1;
     const startTx = Math.floor(view.originX / TILE_SIZE);
@@ -1244,7 +1281,7 @@
       for(let ty = startTy; ty <= endTy; ty++){
         if(ty < 0 || ty > maxIndex) continue;
         const wrappedX = ((tx % (maxIndex + 1)) + (maxIndex + 1)) % (maxIndex + 1);
-        const url = `https://cyberjapandata.gsi.go.jp/xyz/std/${z}/${wrappedX}/${ty}.png`;
+        const url = style.tileUrl(z, wrappedX, ty);
         const dx = tx * TILE_SIZE - view.originX;
         const dy = ty * TILE_SIZE - view.originY;
         jobs.push(loadImage(url).then(img => ({ img, dx, dy })).catch(() => null));
@@ -1320,7 +1357,8 @@
       const W = preset.w, H = preset.h;
       const padPx = Math.round(Math.min(W, H) * 0.12);
       const view = computeView(finalizedLatLngs, W, H, padPx);
-      const tiles = await loadTiles(view, W, H);
+      const basemapKey = basemapSelect.value || 'carto';
+      const tiles = await loadTiles(view, W, H, basemapKey);
 
       const pathPx = finalizedLatLngs.map(p => project(p.lat, p.lng, view));
       const lens = cumulativeLengths(pathPx);
@@ -1374,7 +1412,7 @@
       function drawCredit(){
         const fontSize = Math.max(11, Math.round(W * 0.013));
         ctx.font = `${fontSize}px sans-serif`;
-        const text = '地図データ：国土地理院 ／ Routing © openrouteservice.org';
+        const text = (BASEMAP_STYLES[basemapKey] || BASEMAP_STYLES.carto).credit;
         const paddingX = fontSize * 0.6;
         const textW = ctx.measureText(text).width;
         const boxH = fontSize + paddingX;
