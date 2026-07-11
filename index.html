@@ -575,13 +575,13 @@
 
   <div class="field start">
     <label><span class="dot"></span>出発地</label>
-    <input id="start-input" type="text" placeholder="例：加須駅" autocomplete="off">
+    <input id="start-input" type="text" placeholder="例：金閣寺" autocomplete="off">
     <div class="suggest" id="start-suggest"></div>
   </div>
 
   <div class="field end">
     <label><span class="dot"></span>到着地</label>
-    <input id="end-input" type="text" placeholder="例：パストラル加須" autocomplete="off">
+    <input id="end-input" type="text" placeholder="例：富士山" autocomplete="off">
     <div class="suggest" id="end-suggest"></div>
   </div>
 
@@ -702,7 +702,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
-  const map = L.map('map', { zoomControl: true }).setView([36.0682, 139.6089], 14); // 加須市付近
+  const map = L.map('map', { zoomControl: true }).setView([35.6812, 139.7671], 13); // 東京駅付近
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
@@ -1069,7 +1069,7 @@
   wireAutocomplete(endInput, endSuggest, 'end');
 
   const fullResetBtn = document.getElementById('full-reset-btn');
-  const INITIAL_VIEW = { center: [36.0682, 139.6089], zoom: 14 }; // 加須市付近
+  const INITIAL_VIEW = { center: [35.6812, 139.7671], zoom: 13 }; // 東京駅付近
 
   function fullReset(){
     // ルート・経由点・仮線をすべて除去
